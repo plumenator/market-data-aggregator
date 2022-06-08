@@ -4,6 +4,12 @@ use futures_util::{future, pin_mut, StreamExt};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
 
+use orderbook::orderbook_aggregator_server::OrderbookAggregator;
+
+pub mod orderbook {
+    tonic::include_proto!("orderbook");
+}
+
 #[tokio::main]
 async fn main() {
     let connect_addr = env::args()
