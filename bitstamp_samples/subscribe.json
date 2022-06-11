@@ -1,0 +1,6 @@
+{
+  "event": "bts:subscribe",
+  "data": {
+    "channel": "order_book_btcusd"
+  }
+}

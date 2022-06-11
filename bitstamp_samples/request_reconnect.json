@@ -1,0 +1,5 @@
+{
+    "event": "bts:request_reconnect",
+    "channel": "",
+    "data": ""
+}

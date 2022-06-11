@@ -1,0 +1,120 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link href='https://fonts.googleapis.com/css?family=Roboto:400,300,500,700' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Roboto+Condensed:400,700' rel='stylesheet' type='text/css'>
+    <meta charset=utf-8>
+    <title>Bitstamp live order book example</title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            width: 610px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 30px;
+            color: #666;
+            margin: 0 0 20px 0;
+            text-align: center;
+        }
+
+        .column {
+            width: 300px;
+            display: inline-block;
+        }
+
+        .column h2 {
+            text-align: left;
+        }
+
+        .column:nth-child(3) h2 {
+            text-align: right;
+        }
+
+        .column:nth-child(3) div {
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+<h1>Bitstamp order book</h1>
+<div class="column">
+    <h2>Bids</h2>
+    <div id="bids_placeholder">waiting for orders...</div>
+</div>
+<div class="column">
+    <h2>Asks</h2>
+    <div id="asks_placeholder">waiting for orders...</div>
+</div>
+<script type="text/javascript">
+    var bidsPlaceholder = document.getElementById("bids_placeholder"),
+        asksPlaceholder = document.getElementById("asks_placeholder");
+    /**
+     * This constant is an example of subscription message. By changing its event property to: "bts:unsubscribe"
+     * you can delete your subscription and stop receiving events.
+     */
+    var subscribeMsg = {
+        "event": "bts:subscribe",
+        "data": {
+            "channel": "order_book_btcusd"
+        }
+    };
+    /**
+     * Execute a websocket handshake by sending an HTTP upgrade header.
+     */
+    var ws;
+    initWebsocket();
+
+    /**
+     * Serializes data when it's received.
+     */
+    function serializeData(data) {
+        bidsPlaceholder.innerHTML = '';
+        asksPlaceholder.innerHTML = '';
+        for (i = 0; i < data.bids.length; i++) {
+            bidsPlaceholder.innerHTML = bidsPlaceholder.innerHTML + data.bids[i][1] + ' BTC @ ' + data.bids[i][0] + ' USD' + '<br />';
+        }
+        for (i = 0; i < data.asks.length; i++) {
+            asksPlaceholder.innerHTML = asksPlaceholder.innerHTML + data.asks[i][1] + ' BTC @ ' + data.asks[i][0] + ' USD' + '<br />';
+        }
+    }
+
+    function initWebsocket() {
+        ws = new WebSocket("wss://ws.bitstamp.net");
+
+        ws.onopen = function() {
+            ws.send(JSON.stringify(subscribeMsg));
+        };
+
+        ws.onmessage = function(evt) {
+            response = JSON.parse(evt.data);
+            /**
+             * This switch statement handles message logic. It processes data in case of data event
+             * and it reconnects if the server requires.
+             */
+            switch (response.event) {
+                case 'data': {
+                    serializeData(response.data);
+                    break;
+                }
+                case 'bts:request_reconnect': {
+                    initWebsocket();
+                    break;
+                }
+            }
+
+        };
+        /**
+         * In case of unexpected close event, try to reconnect.
+         */
+        ws.onclose = function () {
+            console.log('Websocket connection closed');
+            initWebsocket();
+        };
+    }
+</script>
+<script async type="text/javascript" src="/_Incapsula_Resource?SWJIYLWA=719d34d31c8e3a6e6fffd425f7e032f3&ns=1&cb=521385831"></script>
+</body>
+</html>

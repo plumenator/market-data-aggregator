@@ -1,0 +1,7 @@
+{
+  "event": "bts:heartbeat",
+  "channel": "",
+  "data": {
+    "status": "success"
+  }
+}
