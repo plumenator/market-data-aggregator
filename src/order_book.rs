@@ -1,10 +1,12 @@
+use rust_decimal::Decimal;
+
 use crate::model::Exchange;
 
-struct Spread(f64);
+struct Spread(Decimal);
 
-struct Price(f64);
+struct Price(Decimal);
 
-struct Amount(f64);
+struct Amount(Decimal);
 
 struct Level {
     exchange: Exchange,
