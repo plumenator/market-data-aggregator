@@ -1,20 +1,24 @@
-pub enum Exchange {
+#[derive(Debug, Eq, PartialEq)]
+pub(crate) enum Exchange {
     Binance,
-    BitStamp,
+    Bitstamp,
 }
 
-enum Currency {
+#[derive(Debug, Eq, PartialEq)]
+pub(crate) enum Currency {
     Eth,
     Btc,
     Usd,
 }
 
-struct Symbol {
+#[derive(Debug, Eq, PartialEq)]
+pub(crate) struct Symbol {
     base: Currency,
     quote: Currency,
 }
 
-struct Market {
+#[derive(Debug, Eq, PartialEq)]
+pub(crate) struct Market {
     exchange: Exchange,
     symbol: Symbol,
 }
