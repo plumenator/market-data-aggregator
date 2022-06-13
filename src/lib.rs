@@ -1,3 +1,3 @@
-mod bitstamp;
-mod model;
+pub mod bitstamp;
+pub mod model;
 mod order_book;

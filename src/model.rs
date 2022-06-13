@@ -1,20 +1,26 @@
 #[derive(Debug, Eq, PartialEq)]
-pub(crate) enum Exchange {
+pub enum Exchange {
     Binance,
     Bitstamp,
 }
 
 #[derive(Debug, Eq, PartialEq)]
-pub(crate) enum Currency {
+pub enum Currency {
     Eth,
     Btc,
     Usd,
 }
 
+impl std::fmt::Display for Currency {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 #[derive(Debug, Eq, PartialEq)]
-pub(crate) struct Symbol {
-    base: Currency,
-    quote: Currency,
+pub struct Symbol {
+    pub base: Currency,
+    pub quote: Currency,
 }
 
 #[derive(Debug, Eq, PartialEq)]

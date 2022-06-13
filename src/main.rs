@@ -1,54 +1,42 @@
 use std::env;
 
-use futures_util::{future, pin_mut, StreamExt};
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
+use futures_util::{pin_mut, StreamExt};
+use tokio::io::AsyncWriteExt;
+use tokio_tungstenite::tungstenite::protocol::Message;
 
-use orderbook::orderbook_aggregator_server::OrderbookAggregator;
+use orderbook_grpc::orderbook_aggregator_server::OrderbookAggregator;
 
-pub mod orderbook {
+use keyrock_tech_challenge::{bitstamp, model};
+
+pub mod orderbook_grpc {
     tonic::include_proto!("orderbook");
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let connect_addr = env::args()
         .nth(1)
         .unwrap_or_else(|| panic!("this program requires at least one argument"));
 
     let url = url::Url::parse(&connect_addr).unwrap();
-
-    let (stdin_tx, stdin_rx) = futures_channel::mpsc::unbounded();
-    tokio::spawn(read_stdin(stdin_tx));
-
-    let (ws_stream, _) = connect_async(url).await.expect("Failed to connect");
-    println!("WebSocket handshake has been successfully completed");
-
-    let (write, read) = ws_stream.split();
-
-    let stdin_to_ws = stdin_rx.map(Ok).forward(write);
+    let levels = bitstamp::levels(
+        url,
+        model::Symbol {
+            base: model::Currency::Btc,
+            quote: model::Currency::Usd,
+        },
+    )
+    .await?;
     let ws_to_stdout = {
-        read.for_each(|message| async {
-            let data = message.unwrap().into_data();
-            tokio::io::stdout().write_all(&data).await.unwrap();
+        levels.for_each(|(asks, bids)| async move {
+            tokio::io::stdout()
+                .write_all(format!("asks:\n{:#?}\nbids:\n{:#?}", asks, bids).as_bytes())
+                .await
+                .unwrap();
         })
     };
 
-    pin_mut!(stdin_to_ws, ws_to_stdout);
-    future::select(stdin_to_ws, ws_to_stdout).await;
-}
-
-// Our helper method which will read data from stdin and send it along the
-// sender provided.
-async fn read_stdin(tx: futures_channel::mpsc::UnboundedSender<Message>) {
-    let mut stdin = tokio::io::stdin();
-    loop {
-        let mut buf = vec![0; 1024];
-        let n = match stdin.read(&mut buf).await {
-            Err(_) | Ok(0) => break,
-            Ok(n) => n,
-        };
-        buf.truncate(n);
-        tx.unbounded_send(Message::binary(buf)).unwrap();
-    }
+    pin_mut!(ws_to_stdout);
+    ws_to_stdout.await;
+    Ok(())
 }

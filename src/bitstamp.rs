@@ -1,13 +1,64 @@
 use std::str::FromStr;
 
 use chrono::{offset::TimeZone, DateTime, Utc};
+use futures_util::{SinkExt, Stream, StreamExt};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
+use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
 
-use crate::order_book::{Amount, Price};
+use crate::{
+    model::{Exchange, Symbol},
+    order_book::{self, Amount, Price},
+};
+
+pub async fn levels(
+    websocket_url: url::Url,
+    symbol: Symbol,
+) -> Result<
+    impl Stream<Item = (Vec<order_book::Level>, Vec<order_book::Level>)>,
+    Box<dyn std::error::Error>,
+> {
+    let (ws_stream, _) = connect_async(websocket_url.clone()).await?;
+    let (mut write, read) = ws_stream.split();
+    write
+        .send(Message::Text(serde_json::to_string(
+            &ClientRawMessage::from(ClientMessage::Subscribe(symbol.into())),
+        )?))
+        .await?;
+    let summaries = read
+        .map(|ws_meessage| {
+            let text = ws_meessage?.into_text()?;
+            let raw_messsage: ServerRawMessage = serde_json::from_str(&text)?;
+            ServerMessage::try_from(raw_messsage)
+        })
+        .filter_map(|rm| async move {
+            rm.ok().and_then(|m| match m {
+                ServerMessage::LiveOrderBookData {
+                    asks,
+                    bids,
+                    currency_pair: _,
+                    timestamp: _,
+                } => Some((
+                    asks.into_iter().map(order_book::Level::from).collect(),
+                    bids.into_iter().map(order_book::Level::from).collect(),
+                )),
+                _ => None,
+            })
+        });
+    Ok(summaries)
+}
 
 #[derive(Debug, Eq, PartialEq, Serialize)]
 struct CurrencyPair(String);
+
+impl std::convert::From<Symbol> for CurrencyPair {
+    fn from(symbol: Symbol) -> Self {
+        let Symbol { base, quote } = symbol;
+        let base_str = base.to_string().to_lowercase();
+        let quote_str = quote.to_string().to_lowercase();
+        CurrencyPair(format!("{}{}", base_str, quote_str))
+    }
+}
 
 enum ClientMessage {
     Heartbeat,
@@ -49,11 +100,11 @@ pub(crate) struct Level {
     amount: Amount,
 }
 
-impl std::convert::From<Level> for crate::order_book::Level {
+impl std::convert::From<Level> for order_book::Level {
     fn from(level: Level) -> Self {
         let Level { price, amount } = level;
         Self {
-            exchange: crate::model::Exchange::Bitstamp,
+            exchange: Exchange::Bitstamp,
             price,
             amount,
         }
@@ -182,8 +233,8 @@ mod tests {
 
     #[test]
     fn level_into() {
-        let level: crate::order_book::Level = Level::default().into();
-        assert_eq!(crate::model::Exchange::Bitstamp, level.exchange)
+        let level: order_book::Level = Level::default().into();
+        assert_eq!(Exchange::Bitstamp, level.exchange)
     }
 
     #[test]
