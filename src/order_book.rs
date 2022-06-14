@@ -25,9 +25,3 @@ pub(crate) struct Summary {
     pub bids: Vec<Level>,
     pub asks: Vec<Level>,
 }
-
-pub(crate) trait Orderbook {
-    fn summary(
-        &self,
-    ) -> Box<dyn Future<Output = Result<BoxStream<Summary>, Box<dyn std::error::Error>>>>;
-}
