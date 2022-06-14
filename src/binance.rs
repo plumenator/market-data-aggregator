@@ -117,7 +117,7 @@ enum ServerMessage {
 #[serde(untagged)]
 enum ServerResult {
     Null,
-    Error { code: i64, msg: String },
+    Error { msg: String },
 }
 
 #[derive(Deserialize, Debug)]
@@ -139,9 +139,7 @@ impl std::convert::TryFrom<ServerRawMessage> for ServerMessage {
         match raw_message {
             ServerRawMessage::Response { result } => match result {
                 ServerResult::Null => Ok(ServerMessage::SubscriptionSucceeded),
-                ServerResult::Error { code: _, msg } => {
-                    Err(format!("Error response: {}", msg).into())
-                }
+                ServerResult::Error { msg } => Err(format!("Error response: {}", msg).into()),
             },
             ServerRawMessage::Payload { asks, bids } => {
                 let asks = asks.iter().map(Level::try_from).collect::<Result<_, _>>()?;

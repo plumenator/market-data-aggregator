@@ -1,4 +1,5 @@
 pub mod binance;
 pub mod bitstamp;
+pub mod logic;
 pub mod model;
-mod order_book;
+pub mod order_book;

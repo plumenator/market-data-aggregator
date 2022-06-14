@@ -4,36 +4,47 @@ use futures_util::{pin_mut, StreamExt};
 use tokio::io::AsyncWriteExt;
 use tokio_tungstenite::tungstenite::protocol::Message;
 
-use orderbook_grpc::orderbook_aggregator_server::OrderbookAggregator;
+use orderbook_proto::orderbook_aggregator_server::OrderbookAggregator;
 
-use keyrock_tech_challenge::{binance, bitstamp, model};
+use keyrock_tech_challenge::{
+    binance, bitstamp,
+    logic::merge,
+    model::{Currency, Symbol},
+    order_book::Summary,
+};
 
-pub mod orderbook_grpc {
+pub mod orderbook_proto {
     tonic::include_proto!("orderbook");
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let connect_addr = env::args()
-        .nth(1)
-        .unwrap_or_else(|| panic!("this program requires at least one argument"));
-
-    let url = url::Url::parse(&connect_addr).unwrap();
-    let levels = binance::levels(
-        url,
-        model::Symbol {
-            base: model::Currency::Eth,
-            quote: model::Currency::Btc,
-        },
+    let symbol = Symbol {
+        base: Currency::Eth,
+        quote: Currency::Btc,
+    };
+    let binance_levels = binance::levels(
+        url::Url::parse("wss://stream.binance.com:9443/ws").unwrap(),
+        symbol.clone(),
     )
     .await?;
+    let bitstamp_levels =
+        bitstamp::levels(url::Url::parse("wss://ws.bitstamp.net").unwrap(), symbol).await?;
     let ws_to_stdout = {
-        levels.for_each(|(asks, bids)| async move {
-            tokio::io::stdout()
-                .write_all(format!("asks:\n{:#?}\nbids:\n{:#?}", asks, bids).as_bytes())
-                .await
-                .unwrap();
-        })
+        merge(binance_levels, bitstamp_levels).for_each(
+            |Summary { asks, bids, spread }| async move {
+                tokio::io::stdout()
+                    .write_all(
+                        format!(
+                            "asks:\n{:#?}\nbids:\n{:#?}\nspread:{}\n",
+                            asks, bids, spread.0
+                        )
+                        .as_bytes(),
+                    )
+                    .await
+                    .unwrap();
+            },
+        )
     };
 
     pin_mut!(ws_to_stdout);

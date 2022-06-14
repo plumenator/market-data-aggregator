@@ -499,6 +499,7 @@ dependencies = [
 name = "keyrock-tech-challenge"
 version = "0.1.0"
 dependencies = [
+ "async-stream",
  "bytes",
  "chrono",
  "futures-channel",
