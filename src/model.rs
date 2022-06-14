@@ -4,7 +4,7 @@ pub enum Exchange {
     Bitstamp,
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Currency {
     Eth,
     Btc,
@@ -17,7 +17,7 @@ impl std::fmt::Display for Currency {
     }
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Symbol {
     pub base: Currency,
     pub quote: Currency,

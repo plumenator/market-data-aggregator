@@ -6,7 +6,7 @@ use tokio_tungstenite::tungstenite::protocol::Message;
 
 use orderbook_grpc::orderbook_aggregator_server::OrderbookAggregator;
 
-use keyrock_tech_challenge::{bitstamp, model};
+use keyrock_tech_challenge::{binance, bitstamp, model};
 
 pub mod orderbook_grpc {
     tonic::include_proto!("orderbook");
@@ -19,11 +19,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .unwrap_or_else(|| panic!("this program requires at least one argument"));
 
     let url = url::Url::parse(&connect_addr).unwrap();
-    let levels = bitstamp::levels(
+    let levels = binance::levels(
         url,
         model::Symbol {
-            base: model::Currency::Btc,
-            quote: model::Currency::Usd,
+            base: model::Currency::Eth,
+            quote: model::Currency::Btc,
         },
     )
     .await?;

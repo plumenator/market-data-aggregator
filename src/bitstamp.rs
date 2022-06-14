@@ -18,7 +18,7 @@ pub async fn levels(
     impl Stream<Item = (Vec<order_book::Level>, Vec<order_book::Level>)>,
     Box<dyn std::error::Error>,
 > {
-    let (ws_stream, _) = connect_async(websocket_url.clone()).await?;
+    let (ws_stream, _) = connect_async(websocket_url).await?;
     let (mut write, read) = ws_stream.split();
     write
         .send(Message::Text(serde_json::to_string(
@@ -48,7 +48,7 @@ pub async fn levels(
     Ok(summaries)
 }
 
-#[derive(Debug, Eq, PartialEq, Serialize)]
+#[derive(Debug, Eq, PartialEq)]
 struct CurrencyPair(String);
 
 impl std::convert::From<Symbol> for CurrencyPair {
@@ -136,7 +136,7 @@ enum ServerMessage {
         timestamp: DateTime<Utc>,
     },
     RequestReconnect,
-    SubscriptionSuceeded(CurrencyPair),
+    SubscriptionSucceeded(CurrencyPair),
 }
 
 #[derive(Deserialize, Debug)]
@@ -181,7 +181,7 @@ impl std::convert::TryFrom<ServerRawMessage> for ServerMessage {
         match raw_message.event.as_str() {
             "bts:heartbeat" => Ok(ServerMessage::Heartbeat),
             "bts:request_reconnect" => Ok(ServerMessage::RequestReconnect),
-            "bts:subscription_succeeded" => Ok(ServerMessage::SubscriptionSuceeded(
+            "bts:subscription_succeeded" => Ok(ServerMessage::SubscriptionSucceeded(
                 parse_currency_pair(&raw_message.channel)?,
             )),
             "data" => {
@@ -298,7 +298,7 @@ mod tests {
             "data": {}
         }))?;
         assert_eq!(
-            SubscriptionSuceeded(CurrencyPair("btcusd".to_string())),
+            SubscriptionSucceeded(CurrencyPair("btcusd".to_string())),
             ServerMessage::try_from(raw_message)?
         );
         Ok(())
