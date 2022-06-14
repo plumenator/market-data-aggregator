@@ -1,14 +1,13 @@
 use std::pin::Pin;
 
 use futures_util::{Stream, StreamExt};
-
-use keyrock_tech_challenge::grpc;
-
 use rustea::{
     command,
     crossterm::event::{KeyCode, KeyEvent, KeyModifiers},
     App, Command, Message,
 };
+
+use keyrock_tech_challenge::grpc;
 
 struct Model {
     stream: Pin<Box<dyn Stream<Item = grpc::proto::Summary> + Send>>,

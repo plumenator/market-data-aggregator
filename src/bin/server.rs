@@ -1,17 +1,29 @@
-use std::{env, net::ToSocketAddrs};
+use std::net::ToSocketAddrs;
+
+use structopt::StructOpt;
+use tonic::transport::Server;
 
 use keyrock_tech_challenge::{
     grpc,
-    model::{Currency, Symbol},
+    model::{Currency, Symbol, CURRENCY_VARIANTS},
 };
-use tonic::transport::Server;
+
+/// A basic example
+#[derive(StructOpt, Debug)]
+struct Opt {
+    #[structopt(short = "b", long)]
+    #[structopt(possible_values = &CURRENCY_VARIANTS, case_insensitive = true)]
+    base: Currency,
+
+    #[structopt(short = "q", long)]
+    #[structopt(possible_values = &CURRENCY_VARIANTS, case_insensitive = true)]
+    quote: Currency,
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let symbol = Symbol {
-        base: Currency::Eth,
-        quote: Currency::Btc,
-    };
+    let Opt { base, quote } = Opt::from_args();
+    let symbol = Symbol { base, quote };
     let server = grpc::OrderbookAggregator { symbol };
     Server::builder()
         .add_service(

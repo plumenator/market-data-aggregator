@@ -1,3 +1,5 @@
+#![recursion_limit = "512"]
+
 pub mod binance;
 pub mod bitstamp;
 pub mod grpc;
