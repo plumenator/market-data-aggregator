@@ -15,7 +15,7 @@ pub async fn levels(
     symbol: Symbol,
 ) -> Result<
     impl Stream<Item = (Vec<order_book::Level>, Vec<order_book::Level>)>,
-    Box<dyn std::error::Error>,
+    Box<dyn std::error::Error + Send + Sync>,
 > {
     let (ws_stream, _) = connect_async(websocket_url).await?;
     let (mut write, read) = ws_stream.split();
@@ -93,7 +93,7 @@ impl std::convert::From<Level> for order_book::Level {
 }
 
 impl std::convert::TryFrom<&Vec<String>> for Level {
-    type Error = Box<dyn std::error::Error>;
+    type Error = Box<dyn std::error::Error + Send + Sync>;
 
     fn try_from(values: &Vec<String>) -> Result<Self, Self::Error> {
         if values.len() != 2 {
@@ -133,7 +133,7 @@ enum ServerRawMessage {
 }
 
 impl std::convert::TryFrom<ServerRawMessage> for ServerMessage {
-    type Error = Box<dyn std::error::Error>;
+    type Error = Box<dyn std::error::Error + Send + Sync>;
 
     fn try_from(raw_message: ServerRawMessage) -> Result<Self, Self::Error> {
         match raw_message {
@@ -163,7 +163,7 @@ mod tests {
     }
 
     #[test]
-    fn server_message_parse() -> Result<(), Box<dyn std::error::Error>> {
+    fn server_message_parse() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let raw_message: ServerRawMessage = serde_json::from_value(json!(
         {
             "result": {
@@ -212,7 +212,7 @@ mod tests {
     }
 
     #[test]
-    fn client_message_gen() -> Result<(), Box<dyn std::error::Error>> {
+    fn client_message_gen() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let raw_message = json!(
         {
             "method": "SUBSCRIBE",

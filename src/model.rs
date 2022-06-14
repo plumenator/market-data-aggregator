@@ -4,6 +4,12 @@ pub enum Exchange {
     Bitstamp,
 }
 
+impl std::fmt::Display for Exchange {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Currency {
     Eth,
