@@ -7,7 +7,7 @@ use rustea::{
     App, Command, Message,
 };
 
-use keyrock_tech_challenge::grpc;
+use market_data_aggregator::grpc;
 
 struct Model {
     stream: Pin<Box<dyn Stream<Item = grpc::proto::Summary> + Send>>,
