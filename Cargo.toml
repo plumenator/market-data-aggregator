@@ -1,5 +1,5 @@
 [package]
-name = "keyrock-tech-challenge"
+name = "market-data-aggregator"
 version = "0.1.0"
 edition = "2021"
 
