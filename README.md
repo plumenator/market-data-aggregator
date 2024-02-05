@@ -1,4 +1,4 @@
-# keyrock-tech-challenge
+# market-data-aggregator
 
 ## System Requirements
 Install the rust toolchain and protoc
@@ -45,7 +45,7 @@ For both the server and the client, press Ctrl+C to quit.
 $ cargo run --bin server -- -h
     Finished dev [unoptimized + debuginfo] target(s) in 0.56s
      Running `target/debug/server -h`
-keyrock-tech-challenge 0.1.0
+market-data-aggregator 0.1.0
 A basic example
 
 USAGE:
