@@ -3,7 +3,7 @@ use std::net::ToSocketAddrs;
 use structopt::StructOpt;
 use tonic::transport::Server;
 
-use keyrock_tech_challenge::{
+use market_data_aggregator::{
     grpc,
     model::{Currency, Symbol, CURRENCY_VARIANTS},
 };
