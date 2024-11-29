@@ -126,6 +126,7 @@ OPTIONS:
 5. Share code between the exchange connector modules
 6. Graceful shutdown
 7. Validate currency _pairs_ instead of individual currencies in the command line arguments
+8. Make it so that it doesn't open a new connection for every client
 
 ## Afterthought about design
 One alternative design would be to split the server into different
